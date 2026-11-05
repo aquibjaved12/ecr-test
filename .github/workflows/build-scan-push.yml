@@ -148,11 +148,17 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      # Re-login in deploy job to get registry URL independently.
+      # Cross-job outputs containing the account ID are masked by GitHub Actions.
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
       - name: Send deploy command via SSM
         id: ssm
         env:
-          IMAGE:       ${{ needs.build-scan-push.outputs.image }}
-          REGISTRY:    ${{ needs.build-scan-push.outputs.registry }}
+          IMAGE:       ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+          REGISTRY:    ${{ steps.login-ecr.outputs.registry }}
           INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
           REGION:      ${{ secrets.AWS_REGION }}
         run: |
