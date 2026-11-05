@@ -28,8 +28,8 @@ resource "aws_iam_role_policy_attachment" "ec2_ssm_core" {
 
 data "aws_iam_policy_document" "ec2_ecr_pull" {
   statement {
-    sid    = "ECRAuth"
-    effect = "Allow"
+    sid     = "ECRAuth"
+    effect  = "Allow"
     actions = ["ecr:GetAuthorizationToken"]
     # GetAuthorizationToken does not support resource-level restrictions
     resources = ["*"]
@@ -99,7 +99,8 @@ data "aws_iam_policy_document" "github_actions" {
     resources = [aws_ecr_repository.app.arn]
   }
 
-  # AWS Inspector — SBOM scan (pre-push, CI/CD API)
+  # Inspector — pre-push SBOM scan via the inspector-scan CI/CD API
+  # sbomgen generates the SBOM locally; AWS scans it server-side before the image hits ECR
   statement {
     sid       = "InspectorSBOMScan"
     effect    = "Allow"
@@ -109,8 +110,8 @@ data "aws_iam_policy_document" "github_actions" {
 
   # SSM — send commands to this EC2 instance only
   statement {
-    sid    = "SSMSendCommand"
-    effect = "Allow"
+    sid     = "SSMSendCommand"
+    effect  = "Allow"
     actions = ["ssm:SendCommand"]
     resources = [
       aws_instance.app.arn,
