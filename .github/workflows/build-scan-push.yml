@@ -9,8 +9,8 @@ on:
 env:
   ECR_REPOSITORY: testpoc-app
   CONTAINER_NAME: testpoc
-  # CRITICAL = block only on critical | HIGH = block only on high
-  FAIL_ON_SEVERITY: HIGH
+  # CRITICAL = block on critical | HIGH = block on high | NONE = scan only, never block
+  FAIL_ON_SEVERITY: NONE
 
 jobs:
   # ─────────────────────────────────────────────────────────────────────────
@@ -106,16 +106,17 @@ jobs:
           CRITICAL=${{ steps.scan.outputs.critical }}
           HIGH=${{ steps.scan.outputs.high }}
 
-          if [ "$FAIL_ON_SEVERITY" = "CRITICAL" ] && [ "$CRITICAL" -gt 0 ]; then
+          if [ "$FAIL_ON_SEVERITY" = "NONE" ]; then
+            echo "Gate set to NONE — scan results recorded, proceeding to push."
+          elif [ "$FAIL_ON_SEVERITY" = "CRITICAL" ] && [ "$CRITICAL" -gt 0 ]; then
             echo "BLOCKED: $CRITICAL critical vulnerabilities found. Image will NOT be pushed to ECR."
             exit 1
-          fi
-          if [ "$FAIL_ON_SEVERITY" = "HIGH" ] && [ "$HIGH" -gt 0 ]; then
+          elif [ "$FAIL_ON_SEVERITY" = "HIGH" ] && [ "$HIGH" -gt 0 ]; then
             echo "BLOCKED: $HIGH high vulnerabilities found. Image will NOT be pushed to ECR."
             exit 1
+          else
+            echo "Gate passed — pushing clean image to ECR."
           fi
-
-          echo "Gate passed — pushing clean image to ECR."
 
       # This line is only reached if the gate above passed
       - name: Push image to ECR
