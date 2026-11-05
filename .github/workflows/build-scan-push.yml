@@ -62,7 +62,7 @@ jobs:
 
       - name: Generate SBOM from local image
         run: |
-          syft ${{ steps.build.outputs.image }} -o cyclonedx-json > sbom.json
+          syft ${{ steps.build.outputs.image }} -o cyclonedx-json@1.5 > sbom.json
           echo "SBOM generated — image has NOT been pushed to ECR yet."
 
       # Send the SBOM to AWS. Inspector scans it server-side and returns findings.
