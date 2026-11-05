@@ -53,19 +53,16 @@ jobs:
           docker build -t "$IMAGE" .
           echo "image=$IMAGE" >> $GITHUB_OUTPUT
 
-      # Download the AWS-provided SBOM generator — a single static binary, no package manager.
-      # It reads the local Docker image and produces a CycloneDX SBOM without touching ECR.
-      - name: Download AWS Inspector SBOM generator
+      # Syft (Anchore) generates a CycloneDX SBOM from the local Docker image.
+      # The aws inspector-scan API accepts standard CycloneDX — no AWS-specific tool needed.
+      - name: Install Syft SBOM generator
         run: |
-          curl -Lo inspector-sbomgen \
-            https://amazon-inspector-sbomgen.s3.amazonaws.com/latest/linux/amd64/inspector-sbomgen
-          chmod +x inspector-sbomgen
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh \
+            | sh -s -- -b /usr/local/bin
 
       - name: Generate SBOM from local image
         run: |
-          ./inspector-sbomgen container \
-            --image ${{ steps.build.outputs.image }} \
-            --output sbom.json
+          syft ${{ steps.build.outputs.image }} -o cyclonedx-json > sbom.json
           echo "SBOM generated — image has NOT been pushed to ECR yet."
 
       # Send the SBOM to AWS. Inspector scans it server-side and returns findings.
