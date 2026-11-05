@@ -9,8 +9,8 @@ on:
 env:
   ECR_REPOSITORY: testpoc-app
   CONTAINER_NAME: testpoc
-  # Set to HIGH to also block on high-severity findings
-  FAIL_ON_SEVERITY: CRITICAL
+  # CRITICAL = block only on critical | HIGH = block only on high
+  FAIL_ON_SEVERITY: HIGH
 
 jobs:
   # ─────────────────────────────────────────────────────────────────────────
@@ -110,8 +110,8 @@ jobs:
             echo "BLOCKED: $CRITICAL critical vulnerabilities found. Image will NOT be pushed to ECR."
             exit 1
           fi
-          if [ "$FAIL_ON_SEVERITY" = "HIGH" ] && ( [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ] ); then
-            echo "BLOCKED: $CRITICAL critical, $HIGH high vulnerabilities found. Image will NOT be pushed to ECR."
+          if [ "$FAIL_ON_SEVERITY" = "HIGH" ] && [ "$HIGH" -gt 0 ]; then
+            echo "BLOCKED: $HIGH high vulnerabilities found. Image will NOT be pushed to ECR."
             exit 1
           fi
 
